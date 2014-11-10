@@ -1,0 +1,35 @@
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Java generated files #
+########################
+
+*.class
+
+# Package Files #
+*.jar
+*.war
+*.ear
+*.ser
+
+
+# IntelliJ IDEA #
+#################
+
+workspace.xml
+tasks.xml
+
+*.iml
+.idea
+
+# Gradle Files #
+################
+.gradle/
+/bin
