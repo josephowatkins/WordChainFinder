@@ -5,6 +5,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class Graph {
 
@@ -12,12 +13,11 @@ public class Graph {
     private Map<String, List<String>> wordMap;
 
     private final String fileName = "map.ser";
-
     private Set<String> examinedWords;
 
+    private final static int NUMBER_OF_THREADS = 8;
 
     public Graph() {
-
         if (wordMap == null && new File(fileName).exists()){
             readMap();
         }
@@ -32,7 +32,7 @@ public class Graph {
         }
 
         // check both words are in the map -
-        if (!wordMap.containsKey(start) || !wordMap.containsKey(end)) {
+        if (wordNotInMap(start) || wordNotInMap(end)) {
             return null;
         }
 
@@ -69,22 +69,22 @@ public class Graph {
         return null;
     }
 
-
-
     /**
      * Builds the graph from the input file and saves the result.
      * @param f
      */
     public void buildGraphFromFile(File f) {
 
-        long startList = System.nanoTime();
+        long startList = getNanoTime();
         populateWordListFromFile(f);
-        long listFinished = System.nanoTime();
+        long listFinished = getNanoTime();
+
         System.out.println("List finished - time elapsed: " + (listFinished - startList) / 1000000);
 
-        long startMap = System.nanoTime();
+        long startMap = getNanoTime();
         populateWordMap();
-        long mapFinished = System.nanoTime();
+        long mapFinished = getNanoTime();
+
         System.out.println("Map finished - time elapsed: " + (mapFinished - startMap) / 1000000);
 
         // save results;
@@ -95,7 +95,6 @@ public class Graph {
         wordList = new ArrayList<>();
 
         try (BufferedReader reader = new BufferedReader(new FileReader(f))){
-
             reader.lines().forEach(wordList::add);
 
         } catch (IOException e) {
@@ -104,38 +103,65 @@ public class Graph {
     }
 
     private void populateWordMap() {
-
         wordMap = new ConcurrentHashMap<>();
-        ExecutorService executors = Executors.newCachedThreadPool();
-
+        ExecutorService executors = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
         for (String s : wordList) {
             executors.execute(new MakeList(s));
         }
         executors.shutdown();
+        try {
+            executors.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
-
-    private boolean oneStep(String word1, String word2) {
-
-        // check not same
-        if (word1.equals(word2)) {
+    /** could modify transformation rules to support word chains of different lengths */
+    private boolean isTransformationLegal(String word1, String word2) {
+        if (wordsAreTheSame(word1, word2)) {
             return false;
-        }
-        // check length
-        if (word1.length() != word2.length()) {
+        } else if (wordsAreNotTheSameLength(word1, word2)) {
             return false;
+        } else if (differenceIsGreaterThanOneCharacter(word1, word2)) {
+            return false;
+        } else {
+           return true;
         }
-        int diff = 0;
+    }
+
+    private boolean differenceIsGreaterThanOneCharacter(String word1, String word2) {
+        int delta = 0;
+
         for (int i = 0; i < word1.length(); i++) {
             if (word1.charAt(i) != word2.charAt(i)) {
-                diff++;
+                delta++;
+                // stop comparison if difference is greater than 1.
+                if (delta > 1){
+                    return true;
+                }
             }
         }
-        return diff <= 1;
+        return false;
     }
 
     private boolean isNewWord(String s) {
         return !examinedWords.contains(s);
+    }
+
+    private boolean wordsAreTheSame(String word1, String word2) {
+        return word1.equals(word2);
+    }
+
+    private boolean wordsAreNotTheSameLength(String word1, String word2) {
+        return word1.length() != word2.length();
+    }
+
+    private boolean wordNotInMap(String start) {
+        return !wordMap.containsKey(start);
+    }
+
+    private long getNanoTime() {
+        return System.nanoTime();
     }
 
     private List<String> createNewPathWithChildAppended(List<String> currentPath, String child) {
@@ -143,11 +169,9 @@ public class Graph {
         newPath.addAll(currentPath);
         newPath.add(child);
         return newPath;
-
     }
 
     private void flush() {
-
         try {
             FileOutputStream fos = new FileOutputStream(fileName);
             ObjectOutputStream oos = new ObjectOutputStream(fos);
@@ -159,7 +183,6 @@ public class Graph {
     }
 
     private void readMap() {
-
         try {
             FileInputStream fis = new FileInputStream(fileName);
             ObjectInputStream ois = new ObjectInputStream(fis);
@@ -181,11 +204,10 @@ public class Graph {
 
         @Override
         public void run() {
-
             // try to shrink the number of comparisons needed.
             List<String> neighbours = null;
             for (String s2 : wordList) {
-                if (oneStep(currentWord, s2)) {
+                if (isTransformationLegal(currentWord, s2)) {
                     if (neighbours == null) {
                         neighbours = new ArrayList<>();
                     }
