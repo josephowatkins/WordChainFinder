@@ -73,12 +73,12 @@ public class Graph {
 
     /**
      * Builds the graph from the input file and saves the result.
-     * @param f
+     * @param file list of legal words.
      */
-    public void buildGraphFromFile(File f) {
+    public void buildGraphFromFile(File file) {
 
         long startList = getNanoTime();
-        populateWordListFromFile(f);
+        populateWordListFromFile(file);
         long listFinished = getNanoTime();
 
         System.out.println("List finished - time elapsed: " + (listFinished - startList) / 1000000);
@@ -179,6 +179,7 @@ public class Graph {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void readMap() {
         try {
             FileInputStream fis = new FileInputStream(fileName);
