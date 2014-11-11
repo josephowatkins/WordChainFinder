@@ -24,14 +24,12 @@ public class Graph {
     }
 
     // BFS - examine all children first, then repeat.
-    public List<String> findPath(String start, String end) {
+    public Path findPath(String start, String end) {
 
-        //check both words are the same length
-        if (start.length() != end.length()) {
+        if (wordsAreNotTheSameLength(start, end)) {
             throw new IllegalArgumentException("Words must be same length");
         }
 
-        // check both words are in the map -
         if (wordNotInMap(start) || wordNotInMap(end)) {
             return null;
         }
@@ -39,26 +37,30 @@ public class Graph {
         examinedWords = new HashSet<>();
         examinedWords.add(start);
 
-        List<List<String>> queue = new LinkedList<>();
-        List<String> path = new ArrayList<>();
+        List<Path> queue = new LinkedList<>();
+        Path path = new Path();
 
-        path.add(start);
+        path.appendWordToPath(start);
         queue.add(path);
 
         while(queue.size() != 0) {
-            List<String> currentPath = queue.remove(0);
-            String currentWord = currentPath.get(currentPath.size() - 1);
+            Path currentPath = queue.remove(0);
+            String currentWord = currentPath.getCurrentWord();
 
             // get all the words associated with the current word
-            List<String> currentList = wordMap.get(currentWord);
-            for (String child : currentList) {
+            List<String> neighbours = wordMap.get(currentWord);
 
-                if (isNewWord(child)) {
+            for (String neighbour : neighbours) {
 
-                    List<String> newPath = createNewPathWithChildAppended(currentPath, child);
-                    examinedWords.add(child);
+                if (isNewWord(neighbour)) {
 
-                    if (child.equals(end)) {
+                    Path newPath = new Path();
+                    newPath.addPathToPath(currentPath);
+                    newPath.appendWordToPath(neighbour);
+
+                    examinedWords.add(neighbour);
+
+                    if (neighbour.equals(end)) {
                         return newPath;
                     } else {
                         queue.add(newPath);
@@ -118,15 +120,17 @@ public class Graph {
 
     /** could modify transformation rules to support word chains of different lengths */
     private boolean isTransformationLegal(String word1, String word2) {
+        boolean result = true;
+
         if (wordsAreTheSame(word1, word2)) {
-            return false;
+            result = false;
         } else if (wordsAreNotTheSameLength(word1, word2)) {
-            return false;
+            result = false;
         } else if (differenceIsGreaterThanOneCharacter(word1, word2)) {
-            return false;
-        } else {
-           return true;
+            result = false;
         }
+
+        return result;
     }
 
     private boolean differenceIsGreaterThanOneCharacter(String word1, String word2) {
@@ -162,13 +166,6 @@ public class Graph {
 
     private long getNanoTime() {
         return System.nanoTime();
-    }
-
-    private List<String> createNewPathWithChildAppended(List<String> currentPath, String child) {
-        List<String> newPath = new ArrayList<>();
-        newPath.addAll(currentPath);
-        newPath.add(child);
-        return newPath;
     }
 
     private void flush() {
