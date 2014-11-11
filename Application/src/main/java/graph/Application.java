@@ -4,7 +4,7 @@ import java.io.File;
 
 public class Application {
 
-    private final String WORD_LIST_FILE = "wordlist.txt";
+    private static final String WORD_LIST_FILE = "wordlist.txt";
 
     public static void main(String[] args) {
         Application app = new Application();
@@ -13,16 +13,15 @@ public class Application {
 
     private void launch() {
 
-
         Graph g = new Graph();
 
 //      VERY SLOW - Around 2.5mins!
-        File f = new File(
-                this.getClass().getResource(WORD_LIST_FILE).getFile());
-        g.buildGraphFromFile(f);
+//        File f = new File(
+//                this.getClass().getResource(WORD_LIST_FILE).getFile());
+//        g.buildGraphFromFile(f);
 
         long start = getNanoTime();
-        Path path = g.findPath("read", "over");
+        Path path = g.findPath("code", "band");
         long end = getNanoTime();
 
         path.prettyPrint();

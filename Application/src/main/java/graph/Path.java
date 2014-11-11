@@ -5,14 +5,18 @@ import java.util.List;
 
 public class Path {
 
+    public final static Path EMPTY_PATH = new Path();
+
     private List<String> path = new ArrayList<>();
+
+    public Path() {}
+
+    public Path(Path path) {
+        this.path.addAll(path.path);
+    }
 
     public void appendWordToPath(String word) {
         this.path.add(word);
-    }
-
-    public void addPathToPath(Path path) {
-        this.path.addAll(path.path);
     }
 
     public String getCurrentWord() {
@@ -22,7 +26,7 @@ public class Path {
     public void prettyPrint() {
         StringBuilder sb = new StringBuilder();
 
-        if (path == null) {
+        if (path.size() == 0) {
             System.out.println("No path found!");
         } else {
             for (int i = 0; i < path.size(); i++) {

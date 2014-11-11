@@ -15,7 +15,7 @@ public class Graph {
     private final String fileName = "map.ser";
     private Set<String> examinedWords;
 
-    private final static int NUMBER_OF_THREADS = 8;
+    private final static int NUMBER_OF_THREADS = 16;
 
     public Graph() {
         if (wordMap == null && new File(fileName).exists()){
@@ -31,7 +31,7 @@ public class Graph {
         }
 
         if (wordNotInMap(start) || wordNotInMap(end)) {
-            return null;
+            return Path.EMPTY_PATH;
         }
 
         examinedWords = new HashSet<>();
@@ -54,8 +54,7 @@ public class Graph {
 
                 if (isNewWord(neighbour)) {
 
-                    Path newPath = new Path();
-                    newPath.addPathToPath(currentPath);
+                    Path newPath = new Path(currentPath);
                     newPath.appendWordToPath(neighbour);
 
                     examinedWords.add(neighbour);
@@ -68,7 +67,7 @@ public class Graph {
                 }
             }
         }
-        return null;
+        return Path.EMPTY_PATH;
     }
 
     /**
